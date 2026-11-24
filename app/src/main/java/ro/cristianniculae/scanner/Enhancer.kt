@@ -45,7 +45,7 @@ object Enhancer {
         val sp = IntArray(sw * sh)
         small.getPixels(sp, 0, sw, 0, 0, sw, sh)
         small.recycle()
-        val bgSmall = IntArray(sw * sh)
+        val bgSmall = IntArray(sw * sh) { 0xFF shl 24 }
         for (shift in intArrayOf(16, 8, 0)) {
             var ch = IntArray(sw * sh) { (sp[it] shr shift) and 0xFF }
             ch = maxFilter(ch, sw, sh, 3)
