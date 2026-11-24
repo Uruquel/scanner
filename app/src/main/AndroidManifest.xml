@@ -5,6 +5,7 @@
 
     <application
         android:allowBackup="false"
+        android:largeHeap="true"
         android:icon="@mipmap/ic_launcher"
         android:label="Scanner"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">

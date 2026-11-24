@@ -55,6 +55,7 @@ class MainActivity : ComponentActivity() {
     private var busy by mutableStateOf<String?>(null)
     private var pendingPages by mutableStateOf<List<ByteArray>?>(null)
     private var ocrEnabled by mutableStateOf(true)
+    private var imageMode by mutableStateOf(ImageMode.COLOR)
     private var driveConnected by mutableStateOf(false)
     private var uploading = false
 
@@ -92,6 +93,7 @@ class MainActivity : ComponentActivity() {
         drive = DriveUploader(this)
         docs.addAll(store.load().sortedByDescending { it.created })
         ocrEnabled = prefs.getBoolean("ocr", true)
+        imageMode = ImageMode.from(prefs.getString("mode", null))
         driveConnected = prefs.getBoolean("driveConnected", false)
 
         setContent {
@@ -125,10 +127,12 @@ class MainActivity : ComponentActivity() {
 
     private fun saveScan(name: String, pages: List<ByteArray>) {
         lifecycleScope.launch {
-            busy = if (ocrEnabled) "Recunosc textul…" else "Creez PDF-ul…"
+            busy = "Prelucrez paginile…"
+            val mode = imageMode
             try {
                 val doc = withContext(Dispatchers.Default) {
-                    val inputs = pages.mapNotNull { jpeg ->
+                    val inputs = pages.mapNotNull { raw ->
+                        val jpeg = try { Enhancer.process(raw, mode) } catch (_: Throwable) { raw }
                         val info = PdfBuilder.jpegInfo(jpeg) ?: return@mapNotNull null
                         val lines = if (ocrEnabled) {
                             try { Ocr.recognize(jpeg, info.width, info.height) } catch (_: Exception) { emptyList() }
@@ -361,6 +365,24 @@ class MainActivity : ComponentActivity() {
                             ocrEnabled = it
                             prefs.edit().putBoolean("ocr", it).apply()
                         })
+                    }
+                    Spacer(Modifier.height(20.dp))
+                    Text("Aspect imagine")
+                    ImageMode.entries.forEach { m ->
+                        Row(
+                            Modifier.fillMaxWidth().clickable {
+                                imageMode = m
+                                prefs.edit().putString("mode", m.key).apply()
+                            },
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(selected = imageMode == m, onClick = null)
+                            Spacer(Modifier.width(8.dp))
+                            Column {
+                                Text(m.label)
+                                Text(m.hint, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                            }
+                        }
                     }
                     Spacer(Modifier.height(20.dp))
                     Text("Google Drive")
