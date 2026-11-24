@@ -78,7 +78,7 @@ class MainActivity : ComponentActivity() {
         try {
             val r = Identity.getAuthorizationClient(this).getAuthorizationResultFromIntent(res.data)
             if (r.accessToken != null) {
-                setDriveConnected(true)
+                markDriveConnected(true)
                 uploadPending(interactive = false)
             }
         } catch (e: Exception) {
@@ -106,7 +106,7 @@ class MainActivity : ComponentActivity() {
 
     private fun toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
 
-    private fun setDriveConnected(v: Boolean) {
+    private fun markDriveConnected(v: Boolean) {
         driveConnected = v
         prefs.edit().putBoolean("driveConnected", v).apply()
     }
@@ -163,7 +163,7 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             try {
                 val token = getToken(interactive) ?: return@launch
-                if (!driveConnected) setDriveConnected(true)
+                if (!driveConnected) markDriveConnected(true)
                 for (doc in docs.filter { it.drive != "done" }) {
                     try {
                         drive.upload(token, store.file(doc), doc.name)
@@ -370,7 +370,7 @@ class MainActivity : ComponentActivity() {
                     )
                     Spacer(Modifier.height(8.dp))
                     if (driveConnected) {
-                        OutlinedButton(onClick = { setDriveConnected(false) }) { Text("Deconectează") }
+                        OutlinedButton(onClick = { markDriveConnected(false) }) { Text("Deconectează") }
                     } else {
                         Button(onClick = { onClose(); uploadPending(interactive = true) }) { Text("Conectează Google Drive") }
                     }
